@@ -6,6 +6,8 @@ import java.time.Instant;
 import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -14,20 +16,16 @@ public class LoginAttemptService {
     private final Map<String, AttemptState> attempts = new ConcurrentHashMap<>();
     private final int maxFailedAttempts;
     private final Duration lockoutDuration;
-    private final Clock clock;
+    private final Clock clock = Clock.systemUTC();
 
     public LoginAttemptService(
             @Value("${security.login.max-failed-attempts:5}") int maxFailedAttempts,
             @Value("${security.login.lockout-minutes:15}") long lockoutMinutes
     ) {
-        this(maxFailedAttempts, Duration.ofMinutes(lockoutMinutes), Clock.systemUTC());
+        this.maxFailedAttempts = maxFailedAttempts;
+        this.lockoutDuration = Duration.ofMinutes(lockoutMinutes);
     }
 
-    LoginAttemptService(int maxFailedAttempts, Duration lockoutDuration, Clock clock) {
-        this.maxFailedAttempts = maxFailedAttempts;
-        this.lockoutDuration = lockoutDuration;
-        this.clock = clock;
-    }
 
     public boolean isLocked(String username) {
         AttemptState state = attempts.get(key(username));

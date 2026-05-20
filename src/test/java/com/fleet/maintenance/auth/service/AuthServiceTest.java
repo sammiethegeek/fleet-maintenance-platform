@@ -38,7 +38,7 @@ class AuthServiceTest {
     void setUp() {
         passwordEncoder = new BCryptPasswordEncoder();
         authService = new AuthService(jwtTokenUtil, passwordEncoder, userRepository,
-                new LoginAttemptService(5, java.time.Duration.ofMinutes(15), java.time.Clock.systemUTC()));
+                new LoginAttemptService(5, 15));
     }
 
     @Test
@@ -128,7 +128,7 @@ class AuthServiceTest {
 
     @Test
     void should_LockAccountTemporarily_When_FailedAttemptsReachThreshold() {
-        LoginAttemptService loginAttemptService = new LoginAttemptService(2, java.time.Duration.ofMinutes(15), java.time.Clock.systemUTC());
+        LoginAttemptService loginAttemptService = new LoginAttemptService(2, 15);
         authService = new AuthService(jwtTokenUtil, passwordEncoder, userRepository, loginAttemptService);
         when(userRepository.findByUsername("coordinator"))
                 .thenReturn(Optional.of(user("coordinator", passwordEncoder.encode("coordinator123"), Role.ROLE_COORDINATOR)));
