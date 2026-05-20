@@ -34,6 +34,13 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
 
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: './frontend/package-lock.json'
+
       - name: Build Angular
         working-directory: ./frontend
         run: |
@@ -42,24 +49,30 @@ jobs:
 
       - name: Embed Angular into Backend
         run: |
-          mkdir -p backend/src/main/resources/static
-          cp -r frontend/dist/fleet-maintenance-frontend/* backend/src/main/resources/static/
+          mkdir -p src/main/resources/static
+          if [ -d frontend/dist/fleet-maintenance-frontend/browser ]; then
+            cp -r frontend/dist/fleet-maintenance-frontend/browser/* src/main/resources/static/
+          else
+            cp -r frontend/dist/fleet-maintenance-frontend/* src/main/resources/static/
+          fi
 
       - name: Build Spring Boot JAR
-        working-directory: ./backend
-        run: mvn clean package -DskipTests
+        run: |
+          chmod +x ./mvnw
+          ./mvnw clean package -DskipTests
 
       - name: Upload Backend JAR
         uses: actions/upload-artifact@v4
         with:
           name: backend-jar
-          path: backend/target/*.jar
+          path: target/*.jar
 
   # ============================================
   # JOB 2: Build & Push Backend to ECR
   # ============================================
   push-backend-ecr:
     needs: build-backend
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
 
     steps:
@@ -70,7 +83,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: backend-jar
-          path: backend/target
+          path: target
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -88,7 +101,7 @@ jobs:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           IMAGE_TAG: ${{ github.sha }}
         run: |
-          docker build -t $ECR_REGISTRY/$ECR_BACKEND:$IMAGE_TAG ./backend
+          docker build -t $ECR_REGISTRY/$ECR_BACKEND:$IMAGE_TAG .
           docker tag $ECR_REGISTRY/$ECR_BACKEND:$IMAGE_TAG $ECR_REGISTRY/$ECR_BACKEND:latest
           docker push $ECR_REGISTRY/$ECR_BACKEND:$IMAGE_TAG
           docker push $ECR_REGISTRY/$ECR_BACKEND:latest
@@ -98,6 +111,7 @@ jobs:
   # ============================================
   deploy-backend-ecs:
     needs: push-backend-ecr
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
 
     steps:
@@ -117,19 +131,30 @@ jobs:
             --task-definition ${{ env.ECS_BACKEND_TASK }} \
             --query taskDefinition \
             --output json > task-definition.json
+          jq 'del(
+            .taskDefinitionArn,
+            .revision,
+            .status,
+            .requiresAttributes,
+            .compatibilities,
+            .registeredAt,
+            .registeredBy,
+            .deregisteredAt,
+            .enableFaultInjection
+          )' task-definition.json > clean-task-definition.json
 
       - name: Render task definition
         id: render-backend
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
-          task-definition: task-definition.json
+          task-definition: clean-task-definition.json
           container-name: fleet-backend
           image: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_BACKEND }}:${{ github.sha }}
 
       - name: Deploy to ECS
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
         with:
-          task-definition: task-definition.json
+          task-definition: ${{ steps.render-backend.outputs.task-definition }}
           service: ${{ env.ECS_BACKEND_SERVICE }}
           cluster: ${{ env.ECS_CLUSTER }}
           wait-for-service-stability: true
@@ -138,6 +163,7 @@ jobs:
   # JOB 4: Build & Push BFF to ECR
   # ============================================
   build-bff:
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
 
     steps:
@@ -147,7 +173,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '18'
+          node-version: '20'
           cache: 'npm'
           cache-dependency-path: './bff/package-lock.json'
 
@@ -183,6 +209,7 @@ jobs:
   # ============================================
   deploy-bff-ecs:
     needs: build-bff
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
 
     steps:
@@ -202,19 +229,30 @@ jobs:
             --task-definition ${{ env.ECS_BFF_TASK }} \
             --query taskDefinition \
             --output json > task-definition.json
+          jq 'del(
+            .taskDefinitionArn,
+            .revision,
+            .status,
+            .requiresAttributes,
+            .compatibilities,
+            .registeredAt,
+            .registeredBy,
+            .deregisteredAt,
+            .enableFaultInjection
+          )' task-definition.json > clean-task-definition.json
 
       - name: Render task definition
         id: render-bff
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
-          task-definition: task-definition.json
+          task-definition: clean-task-definition.json
           container-name: fleet-bff
           image: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.${{ env.AWS_REGION }}.amazonaws.com/${{ env.ECR_BFF }}:${{ github.sha }}
 
       - name: Deploy to ECS
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
         with:
-          task-definition: task-definition.json
+          task-definition: ${{ steps.render-bff.outputs.task-definition }}
           service: ${{ env.ECS_BFF_SERVICE }}
           cluster: ${{ env.ECS_CLUSTER }}
           wait-for-service-stability: true
