@@ -43,7 +43,7 @@ jobs:
       - name: Embed Angular into Backend
         run: |
           mkdir -p backend/src/main/resources/static
-          cp -r frontend/dist/frontend/browser/* backend/src/main/resources/static/
+          cp -r dist/fleet-maintenance-frontend/* backend/src/main/resources/static/
 
       - name: Build Spring Boot JAR
         working-directory: ./backend
