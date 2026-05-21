@@ -12,7 +12,7 @@ export interface LoginResponse {
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {
-  private readonly apiBase = 'http://localhost:3000/api';
+  private readonly apiBase = '/api';
 
   constructor(private readonly http: HttpClient) {
   }

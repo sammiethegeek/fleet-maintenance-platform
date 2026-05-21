@@ -52,7 +52,7 @@ export interface MaintenanceDetails {
 
 @Injectable({ providedIn: 'root' })
 export class FleetApiService {
-  private readonly apiBase = 'http://localhost:3000/api';
+  private readonly apiBase = '/api';
 
   constructor(private readonly http: HttpClient) {
   }

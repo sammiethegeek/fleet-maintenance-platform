@@ -16,7 +16,7 @@ type AuthenticatedRequest = Request & {
   };
 };
 
-app.use(cors({ origin: 'http://localhost:4200' }));
+app.use(cors({ origin: process.env.ALLOWED_ORIGINS?.split(',') ?? '*' }));
 app.use(express.json());
 
 const backend = axios.create({
