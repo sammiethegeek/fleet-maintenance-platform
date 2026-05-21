@@ -1,7 +1,7 @@
 package com.fleet.maintenance.auth.entity;
 
 import com.fleet.maintenance.shared.dto.Role;
-import java.time.LocalDateTime;
+import java.time.Instant;
 import lombok.Getter;
 import lombok.Setter;
 import software.amazon.awssdk.enhanced.dynamodb.mapper.annotations.DynamoDbAttribute;
@@ -16,8 +16,8 @@ public class UserAccount {
     private String name;
     private String passwordHash;
     private Role role;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    private Instant createdAt;
+    private Instant updatedAt;
     private String userId;
 
     @DynamoDbPartitionKey
@@ -47,22 +47,22 @@ public class UserAccount {
     }
 
     @DynamoDbAttribute("createdAt")
-    public LocalDateTime getCreatedAt() {
+    public Instant getCreatedAt() {
         return createdAt;
     }
 
     @DynamoDbAttribute("updatedAt")
-    public LocalDateTime getUpdatedAt() {
+    public Instant getUpdatedAt() {
         return updatedAt;
     }
 
     public void touchForCreate() {
-        LocalDateTime now = LocalDateTime.now();
+        Instant now = Instant.now();
         createdAt = now;
         updatedAt = now;
     }
 
     public void touchForUpdate() {
-        updatedAt = LocalDateTime.now();
+        updatedAt = Instant.now();
     }
 }

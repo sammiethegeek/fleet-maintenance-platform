@@ -52,7 +52,7 @@ export interface MaintenanceDetails {
 
 @Injectable({ providedIn: 'root' })
 export class FleetApiService {
-  private readonly apiBase = '/api';
+  private readonly apiBase = '/bff-api';
 
   constructor(private readonly http: HttpClient) {
   }
