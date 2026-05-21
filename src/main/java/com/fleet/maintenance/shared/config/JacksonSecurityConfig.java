@@ -17,7 +17,7 @@ public class JacksonSecurityConfig {
         return builder -> {
             SimpleModule module = new SimpleModule();
             module.addSerializer(String.class, new HtmlEscapingStringSerializer());
-            builder.modules(module);
+            builder.modulesToInstall(module);
         };
     }
 
