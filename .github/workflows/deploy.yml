@@ -56,6 +56,10 @@ jobs:
             cp -r frontend/dist/fleet-maintenance-frontend/* src/main/resources/static/
           fi
 
+      - name: List static directory contents
+        run: |
+          ls -l src/main/resources/static
+
       - name: Build Spring Boot JAR
         run: |
           chmod +x ./mvnw
