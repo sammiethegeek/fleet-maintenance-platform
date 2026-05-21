@@ -44,14 +44,14 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/bff-api/**", "/", "/index.html", "/*.js", "/*.css", "/*.ico", "/assets/**", "/**/v3/api-docs/**", "/**/swagger-ui/**").permitAll()
+                        .requestMatchers("/bff-api/**", "/", "/index.html", "/*.js", "/*.css", "/*.ico", "/assets/**", "/v3/api-docs/**", "/api/v3/api-docs/**", "/swagger-ui/**", "/api/swagger-ui/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/auth/login", "/api/auth/login").permitAll()
                         .requestMatchers(HttpMethod.GET, "/dashboard", "/api/dashboard").hasAnyAuthority("ROLE_COORDINATOR", "ROLE_PROVIDER")
                         .requestMatchers(HttpMethod.POST, "/maintenance-requests", "/api/maintenance-requests").hasAuthority("ROLE_COORDINATOR")
                         .requestMatchers(HttpMethod.PUT, "/maintenance-requests/*/assign-provider", "/api/maintenance-requests/*/assign-provider").hasAuthority("ROLE_COORDINATOR")
                         .requestMatchers(HttpMethod.POST, "/maintenance-requests/*/inspection", "/api/maintenance-requests/*/inspection").hasAuthority("ROLE_PROVIDER")
                         .requestMatchers(HttpMethod.POST, "/maintenance-requests/*/decision", "/api/maintenance-requests/*/decision").hasAuthority("ROLE_COORDINATOR")
-                        .requestMatchers("/{path:[^\\.]*}", "/**/{path:[^\\.]*}").permitAll()
+                        
                 .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)

@@ -1,7 +1,7 @@
 package com.fleet.maintenance.request.entity;
 
 import com.fleet.maintenance.shared.dto.MaintenanceStatus;
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.UUID;
 import lombok.Getter;
 import lombok.Setter;
@@ -25,10 +25,10 @@ public class MaintenanceRequest {
     private Integer impactedPeopleCount;
     private String assignedTo;
     private String providerName;
-    private Instant createdOn;
-    private Instant updatedOn;
-    private Instant createdAt;
-    private Instant updatedAt;
+    private LocalDateTime createdOn;
+    private LocalDateTime updatedOn;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
     @DynamoDbPartitionKey
     @DynamoDbAttribute("id")
@@ -87,22 +87,22 @@ public class MaintenanceRequest {
     }
 
     @DynamoDbAttribute("createdOn")
-    public Instant getCreatedOn() {
+    public LocalDateTime getCreatedOn() {
         return createdOn;
     }
 
     @DynamoDbAttribute("updatedOn")
-    public Instant getUpdatedOn() {
+    public LocalDateTime getUpdatedOn() {
         return updatedOn;
     }
 
     @DynamoDbAttribute("createdAt")
-    public Instant getCreatedAt() {
+    public LocalDateTime getCreatedAt() {
         return createdAt;
     }
 
     @DynamoDbAttribute("updatedAt")
-    public Instant getUpdatedAt() {
+    public LocalDateTime getUpdatedAt() {
         return updatedAt;
     }
 
@@ -116,7 +116,7 @@ public class MaintenanceRequest {
     }
 
     public void touchForCreate() {
-        Instant now = Instant.now();
+        LocalDateTime now = LocalDateTime.now();
         if (id == null) {
             id = UUID.randomUUID();
         }
@@ -134,6 +134,6 @@ public class MaintenanceRequest {
     }
 
     public void touchForUpdate() {
-        updatedAt = Instant.now();
+        updatedAt = LocalDateTime.now();
     }
 }
